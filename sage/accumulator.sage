@@ -168,15 +168,11 @@ def GenerateData(count):
 def Accumulate(base, dataset):
     for data in dataset:
         base = ZKVolute(base, data)
-        #base = ZKVolute(data, base)
-
     return base
 
 def AuthAccumulate(base, dataset):
     for data in dataset:
         base = ZKVolute(base, data,1)
-#         base = ZKVolute(data,base,0)
-
     return base
 
 
