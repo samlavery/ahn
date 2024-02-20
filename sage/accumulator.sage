@@ -201,18 +201,20 @@ for _ in range(0,1000):
 
     #Test signing accumulator using the public key
     data = GenerateData(data_count)
-    pk_a=ZKVolute(ca,sk_a,1) 
+    pk_a = ZKVolute(sk_a, ca,1)
+    pk_a = ZKVolute(pk_a, sk_a,1)
 
     #We start with a random base to accumulate into
     acc = AuthAccumulate(cb, data)
 
     #Create a signed version
-    tmp = ZKVolute(ca,acc,1)
-    signed = ZKVolute(tmp,sk_a,1)
+    signed = ZKVolute(sk_a, acc,1) 
+    signed = ZKVolute(signed, sk_a,1)
 
     #Check that signed version is correct
-    check = ZKVolute(pk_a, acc,1) 
-    assert signed == check
+    check1 = ZKVolute(pk_a, acc,1) 
+    check2 = ZKVolute(signed, ca,1)
+    assert check1 == check2
     print("Authenticated accumulator passed")
 
 
