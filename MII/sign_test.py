@@ -48,7 +48,7 @@ def ntt(a, MODULUS, ROOT_OF_UNITY, depth=0):
     return y
 
 
-# Modular arithmetic
+# Standard modular arithmetic
 ################################################################
 def pointwise_addition(vec1, vec2, modulus):
     return [(x + y) % modulus for x, y in zip(vec1, vec2)]
@@ -58,6 +58,13 @@ def pointwise_multiplication(vec1, vec2, modulus):
 
 ################################################################
 # MAIN MARKII SIG FUNCTIONS
+# INPUT
+# sk_a: first half secret key
+# sk_alt: second half of secret key
+# chal: Fiat-Shamir style challenge on a message
+#
+# OUTPUT
+# proof_rep: a proof of possession of sk_a and sk_alt based on a reference challenge
 def ZKVolute_ProofGen(sk_a, sk_alt, chal):
     sk_rep = sk_a
     sk_rep_alt = sk_alt
@@ -91,39 +98,46 @@ def ZKVolute_ProofGen(sk_a, sk_alt, chal):
             proof_rep = ntt_inverse(proof_rep, p, w, original_n=n)
     return proof_rep
 
+#######
+# INPUT
+# pk_a: homomorphic public key (1st half of pk)
+# pk_chal: public challenge (2nd half of pk)
+# sig: signature
+# sig_chal: Fiat-Shamir style hash to vector representation of a message
+#
+# OUTPUT
+# True or False
 def ZKVolute_ProofVerify(pk_a, pk_chal, sig, sig_chal):
     p = ps[0]
     w = ws[0]
-    i = 0
     sig_chal = ntt(sig_chal, p, w)
     pk_chal = ntt(pk_chal, p, w)
-    if i == 0:
-        chk_rep1 = pointwise_multiplication(sig_chal, pk_a, p)
-        for _ in range(0, rnds):
-            chk_rep1 = pointwise_multiplication(chk_rep1, sig_chal, p)
+    chk_rep1 = pointwise_multiplication(sig_chal, pk_a, p)
+    for _ in range(0, rnds):
+        chk_rep1 = pointwise_multiplication(chk_rep1, sig_chal, p)
 
-        chk_rep2 = pointwise_multiplication(pk_chal, sig, p)
-        for _ in range(0, rnds):
-            chk_rep2 = pointwise_multiplication(chk_rep2, pk_chal, p)
-        assert chk_rep1 == chk_rep2
-        if chk_rep1 == chk_rep2:
-            return True
-        else:
-            return False
+    chk_rep2 = pointwise_multiplication(pk_chal, sig, p)
+    for _ in range(0, rnds):
+        chk_rep2 = pointwise_multiplication(chk_rep2, pk_chal, p)
+    assert chk_rep1 == chk_rep2
+    if chk_rep1 == chk_rep2:
+        return True
+    else:
+        return False
 
 
 # Main test loop
 if True:
-    sk_a = tuple(randbelow(255) for _ in range(n))  # sk
-    sk_alt = tuple(randbelow(255) for _ in range(n))  # second sk
-    ca = tuple(randbelow(255) for _ in range(n))  # Ca
-    for yx in range(0, 100):
-        # just pick a bunch of random challenges for test
-        fs = tuple(randbelow(255) for _ in range(n))  # FS_Chal
+    sk_a = tuple(randbelow(255) for _ in range(n))  # first secret key
+    sk_alt = tuple(randbelow(255) for _ in range(n))  # second secret key
+    ca = tuple(randbelow(255) for _ in range(n))  # public challenge value
+    for _ in range(0, 100):
+        # Pick a bunch of random challenges for test
+        fs = tuple(randbelow(255) for _ in range(n))  # Fiat-Shamir challenge emulation
 
-        pk_a = ZKVolute_ProofGen(sk_a, sk_alt, ca)
-        sig = ZKVolute_ProofGen(sk_a, sk_alt, fs)
-        check = ZKVolute_ProofVerify(pk_a, ca, sig, fs)
+        pk_a = ZKVolute_ProofGen(sk_a, sk_alt, ca) # Homomorphic half of actual public key
+        sig = ZKVolute_ProofGen(sk_a, sk_alt, fs) #  A proof of posession against a Fiat-Shamir style challenge
+        check = ZKVolute_ProofVerify(pk_a, ca, sig, fs) # Check equivariance
         #print("PK:", pk_a)
         #print("SK:", sk_a)
         #print("SX:", sk_alt)
