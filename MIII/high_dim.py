@@ -19,9 +19,9 @@ import matplotlib.pyplot as plt
 test_runs = 1000
 perform_stats_tests = True
 n = 1024
-rnds = 6
-ps = [16241, 16241, 65537]
-ws = [3, 1, 3]
+rnds = 6 
+ps = [15361, 15361, 65537]
+ws = [7, 7, 13]
 ################################################################
 
 
@@ -191,6 +191,8 @@ if True:
     for prog in range(0, test_runs):
         progBar(prog, test_runs)
         # Pick a random challenge for test
+        pk_a = ZKVolute_ProofGen(sk_a, sk_alt, sk_alt1, ca)
+
         fs = generate_non_zero_vector(n, ps[0])  # Fiat-Shamir challenge emulation
 
         sig = ZKVolute_ProofGen(
@@ -200,9 +202,10 @@ if True:
         proofs.append(sig)  # for analysis
         challenges.append(fs)
         if check == False:
-            print("Failed test")
+            print("Failed test", ps[2])
             exit(0)
-
+        else:
+            attempts=attempts #nop
 
 if perform_stats_tests == True:
     flat_list = [item for sublist in proofs for item in sublist]
@@ -219,6 +222,5 @@ if perform_stats_tests == True:
     mutual_info = calculate_mutual_information(pk_a, ca)
     print("Mutual Information pk/ca:", mutual_info)
     print("Keygen completed after ", attempts, "attempts")
-    # print(ps[3])
 
 print("PASS")
